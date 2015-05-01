@@ -3,7 +3,6 @@
  * 
  * by welefen
  */
- var idata;
 (function($) {
 	var Util = {
 		support : {
@@ -322,7 +321,6 @@
 		} else if (pjax.options.push === false) {
 			history.replaceState(pjax.state, document.title, pjax.options.oldUrl);
 		}
-		idata = data;
 		pjax.options.showFn && pjax.options.showFn($(data).find(pjax.options.container).children(), function() {
 			pjax.options.callback && pjax.options.callback.call(pjax.options.element,{
 				type : isCached? 'cache' : 'success'
