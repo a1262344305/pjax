@@ -19,16 +19,25 @@ pjax是对ajax + pushState的封装，让你可以很方便的使用pushState技
 
 
 ```
-	$.pjax({
-		selector: 'a',
-		container: '#container', //内容替换的容器
-		show: 'fade',  //展现的动画，支持默认和fade, 可以自定义动画方式，这里为自定义的function即可。
-		cache: true,  //是否使用缓存
-		storage: true,  //是否使用本地存储
-		titleSuffix: '', //标题后缀
-		filter: function(){},
-		callback: function(){}
-	})
+(function($) {
+    var pjaxdiv = '#pjax-container';
+    $.pjax({
+        selector: '.pjax-a a[href^="http://haipz.com"]',
+        container: pjaxdiv, //内容替换的容器
+        show: '',  //展现的动画，支持默认和fade, 可以自定义动画方式，这里为自定义的function即可。
+        cache: true,  //是否使用缓存
+        storage: true,  //是否使用本地存储
+        titleSuffix: '', //标题后缀
+        filter: function(){},
+        callback: function(){}
+    })
+    $(pjaxdiv).bind('pjax.start', function() {
+        $('#pjax-loading').fadeIn();
+    });
+    $(pjaxdiv).bind('pjax.end', function(){
+        $('#pjax-loading').fadeOut();
+    });
+})(jQuery);
 
 ```
 ### qwrap版
