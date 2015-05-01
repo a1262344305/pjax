@@ -1,8 +1,9 @@
 /*!
  * pjax(ajax + history.pushState) for jquery
  * 
- * by haipz
+ * by welefen
  */
+ var idata;
 (function($) {
 	var Util = {
 		support : {
@@ -257,7 +258,7 @@
 					}), document.title);
 				}
 			} else {
-				$(document.body).animate({'scrollTop':0},1000);
+				$(document.body).animate({'scrollTop':0},500);
 				//window.scrollTo(0, 0);
 			}
 			fn && fn.call(this, data, isCached);
@@ -321,7 +322,8 @@
 		} else if (pjax.options.push === false) {
 			history.replaceState(pjax.state, document.title, pjax.options.oldUrl);
 		}
-		pjax.options.showFn && pjax.options.showFn($(data).find(pjax.options.container), function() {
+		idata = data;
+		pjax.options.showFn && pjax.options.showFn($(data).find(pjax.options.container).children(), function() {
 			pjax.options.callback && pjax.options.callback.call(pjax.options.element,{
 				type : isCached? 'cache' : 'success'
 			});
