@@ -1,7 +1,7 @@
 /*!
  * pjax(ajax + history.pushState) for jquery
  * 
- * by welefen
+ * by haipz
  */
 (function($) {
 	var Util = {
@@ -187,6 +187,31 @@
 			$(pjax.options.container).trigger('pjax.end', [ xhr, pjax.options ]);
 		}
 	};
+	// 执行js代码
+	pjax.executeScript = function(html) {
+		var reg = /<script[^>]*>([^\x00]+)$/i;
+		//对整段HTML片段按<\/script>拆分
+		var htmlBlock = html.split("<\/script>");
+		for ( var i in htmlBlock) {
+			var blocks;//匹配正则表达式的内容数组，blocks[1]就是真正的一段脚本内容，因为前面reg定义我们用了括号进行了捕获分组
+			if (blocks = htmlBlock[i].match(reg)) {
+				//清除可能存在的注释标记，对于注释结尾-->可以忽略处理，eval一样能正常工作
+				var code = blocks[1].replace(/<!--/, '');
+				try {
+					//eval_r(code) //执行脚本
+					if (!!(window.attachEvent && !window.opera)) {
+						//ie
+						execScript(code);
+					} else {
+						//not ie
+						window.eval_r(code);
+					}
+				}
+				catch (e) {
+				}
+			}
+		}
+	}
 	// 展现动画
 	pjax.showFx = {
 		"_default" : function(data, callback, isCached) {
@@ -196,8 +221,11 @@
 		fade: function(data, callback, isCached){
 			var $this = this;
 			if(isCached){
-				$this.html(data);
-				callback && callback.call($this, data, isCached);
+				this.fadeOut(500, function() {
+					$this.html(data).fadeIn(500, function() {
+						callback && callback.call($this, data, isCached);
+					});
+				});
 			}else{
 				this.fadeOut(500, function(){
 					$this.html(data).fadeIn(500, function(){
@@ -229,10 +257,13 @@
 					}), document.title);
 				}
 			} else {
-				window.scrollTo(0, 0);
+				$(document.body).animate({'scrollTop':0},1000);
+				//window.scrollTo(0, 0);
 			}
 			fn && fn.call(this, data, isCached);
 		}, isCached);
+		// 执行js代码
+		pjax.executeScript(String($(data).find(pjax.options.container)));
 	}
 	// success callback
 	pjax.success = function(data, isCached) {
@@ -244,7 +275,7 @@
 		if (pjax.html) {
 			data = $(data).find(pjax.html).html();
 		}
-		if ((data || '').indexOf('<html') != -1) {
+		if ((data || '').indexOf('<html') == -1) {
 			pjax.options.callback && pjax.options.callback.call(pjax.options.element, {
 				type : 'error'
 			});
@@ -282,7 +313,7 @@
 		if (pjax.options.push) {
 			if (!pjax.active) {
 				history.replaceState($.extend({}, pjax.state, {
-					url : null
+					url : location.href
 				}), document.title);
 				pjax.active = true;
 			}
@@ -290,7 +321,7 @@
 		} else if (pjax.options.push === false) {
 			history.replaceState(pjax.state, document.title, pjax.options.oldUrl);
 		}
-		pjax.options.showFn && pjax.options.showFn(data, function() {
+		pjax.options.showFn && pjax.options.showFn($(data).find(pjax.options.container), function() {
 			pjax.options.callback && pjax.options.callback.call(pjax.options.element,{
 				type : isCached? 'cache' : 'success'
 			});
@@ -359,8 +390,9 @@
 					timeout : state.timeout,
 					cache : state.cache,
 					storage : state.storage,
-					title: state.title,
-					element: null
+					title : state.title,
+					show : state.show,
+					element : null
 				};
 				pjax.request(data);
 			} else {
